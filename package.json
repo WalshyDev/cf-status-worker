@@ -1,0 +1,20 @@
+{
+  "name": "cf-status",
+  "version": "1.0.0",
+  "description": "Log the status of Cloudflare in Discord",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "miniflare",
+    "build": "webpack ."
+  },
+  "author": "Daniel Walsh (@WalshyDev)",
+  "license": "MIT",
+  "dependencies": {
+    "htmlparser2": "^7.1.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0"
+  }
+}
