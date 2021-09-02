@@ -123,8 +123,12 @@ async function sendToDiscord(type, incident) {
 
 function htmlToMarkdown(html) {
   const tagRegex = /<\/?[a-z -=]+>/gm;
+  const linkRegex = /<a href="(.+)">(.+)<\/a>/gm;
 
   let result = html;
+
+  // <a href="link">Some text</a> -> [Some text](link)
+  result = result.replace(linkRegex, '[$2]($1)');
 
   result = result.replaceAll('<p>', '')
     .replaceAll('</p>', '\n')
