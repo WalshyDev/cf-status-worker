@@ -1,7 +1,9 @@
 import { parseFeed } from 'htmlparser2';
 
 addEventListener('fetch', (event) => {
-  return event.respondWith(handleRequest(event));
+  event.respondWith(handleRequest(event.request)
+    .catch((err) => new Response(err.stack, { status: 500 }))
+  );
 })
 
 addEventListener("scheduled", event => {
@@ -137,7 +139,7 @@ function htmlToMarkdown(html) {
     .replaceAll('<br/>', '\n')
     .replaceAll('<br />', '\n')
     // Bold text
-    .replaceAll('<strong>', '**')
+    .replaceAll('<strong>', '\n**')
     .replaceAll('</strong>', '**')
     // Just remove 'non breaking space'
     .replaceAll('&nbsp;', '');
