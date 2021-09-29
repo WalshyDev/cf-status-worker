@@ -45,7 +45,7 @@ async function handleRequest(event) {
 }
 
 async function postNew(incident) {
-  const messageId = await sendToDiscord('New Incident', incident);
+  const messageId = await sendToDiscord(incident);
 
   incident.messageId = messageId;
 
@@ -63,7 +63,7 @@ async function postUpdate(kv, incident) {
   // It has been updated so post a new update!
   if (date.getTime() !== cachedDate.getTime()) {
     await KV.put(cachedVal.id, JSON.stringify(incident));
-    await sendToDiscord('Incident Update', incident);
+    await sendToDiscord(incident);
   }
 }
 
@@ -91,7 +91,7 @@ function getStatusColor(msg) {
   return 0;
 }
 
-async function sendToDiscord(type, incident) {
+async function sendToDiscord(incident) {
   const desc = htmlToMarkdown(incident.description);
 
   const messageId = incident.messageId;
@@ -107,7 +107,7 @@ async function sendToDiscord(type, incident) {
       // avatar_url: '',
       embeds: [{
         type: 'rich',
-        title: type,
+        title: `${incident.title}`,
         url: incident.link,
         description: desc,
         timestamp: incident.pubDate,
@@ -133,13 +133,13 @@ function htmlToMarkdown(html) {
   result = result.replace(linkRegex, '[$2]($1)');
 
   result = result.replaceAll('<p>', '')
-    .replaceAll('</p>', '\n')
+    .replaceAll('</p>', '\n\n')
     // New lines
     .replaceAll('<br>', '\n')
     .replaceAll('<br/>', '\n')
     .replaceAll('<br />', '\n')
     // Bold text
-    .replaceAll('<strong>', '\n**')
+    .replaceAll('<strong>', '**')
     .replaceAll('</strong>', '**')
     // Just remove 'non breaking space'
     .replaceAll('&nbsp;', '');
