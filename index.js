@@ -41,8 +41,8 @@ async function handleRequest(event) {
         await postUpdate(kv, incident);
       }
     }));
-    
-    return new Response('Ok!');
+
+  return new Response('Ok!');
 }
 
 async function postNew(incident) {
