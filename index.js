@@ -29,19 +29,20 @@ async function handleRequest(event) {
 
   const incidents = parseFeed(txt).items;
 
-  for (const incident of incidents) {
-    delete incident.media;
+  await Promise.all(incidents
+    .map(async incident => {
+      delete incident.media;
 
-    const kv = await KV.get(incident.id);
+      const kv = await KV.get(incident.id);
 
-    if (kv === null) {
-      await postNew(incident);
-    } else {
-      await postUpdate(kv, incident);
-    }
-  }
-
-  return new Response('Ok!');
+      if (kv === null) {
+        await postNew(incident);
+      } else {
+        await postUpdate(kv, incident);
+      }
+    }));
+    
+    return new Response('Ok!');
 }
 
 async function postNew(incident) {
