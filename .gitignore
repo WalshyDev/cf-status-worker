@@ -1,6 +1,7 @@
 # Folders
 /dist/
 /worker/
+/node_modules/
 
 # Files
 .env
