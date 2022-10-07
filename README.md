@@ -1,13 +1,9 @@
-# Cloudflare Status Worker
+# Status Cloudflare Worker
 
-This Worker is pretty simple, when there's an incident logged on
-[Cloudflare's Status Page](https://www.cloudflarestatus.com/)
-the worker will send a new Discord message about it.
-When there's an update to the incident, the message is updated!
+This Cloudflare Worker is made to monitor a status page for incidents. If there is one, it will post into a Discord server (with optional publishing) and continously update the message with incident updates. This allows you to easily track incidents which may be impacting you right inside of Discord.
 
-I made this for my personal server so that when there's an incident I can
-find out early and quickly. Saves me pulling my hair out for a while
-and finally checking the status page later only to see a problem.
+Want to see it in action?\
+We use this in the [Cloudflare Discord](https://discord.gg/cloudflaredev), come check it out!
 
 ## How do I set this up?
 There are a few steps to the setup but it should hopefully be pretty straightforward:
