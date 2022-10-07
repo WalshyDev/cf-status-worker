@@ -1,12 +1,12 @@
-name = "cf-status"
-type = "webpack"
-workers_dev = true
-account_id = "4e599df4216133509abaac54b109a647"
+name = "status-worker"
+workers_dev = false
+account_id = ""
+compatibility_date = "2022-10-06"
+main = "src/index.ts"
 
 kv_namespaces = [
-  { binding = "KV", id = "cd16d4566ec0408d84989e51f82488bc" }
+  { binding = "KV", id = "", preview_id = "" }
 ]
 
 [triggers]
 crons = ["* * * * *"]
-

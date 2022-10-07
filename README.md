@@ -10,11 +10,12 @@ find out early and quickly. Saves me pulling my hair out for a while
 and finally checking the status page later only to see a problem.
 
 ## How do I set this up?
-That's simple! Just click the "Deploy with Workers" button below and then add
-a new secret in the GitHub repo called `DISCORD_WEBHOOK`. Point this to your channels webhook and done!\
-The Worker will now send new incidents and updates :)
+There are a few steps to the setup but it should hopefully be pretty straightforward:
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/WalshyDev/cf-status-worker)
+1. Clone the repo
+2. Edit `src/config.ts` - here you can set the status URL, name of the webhook, avatar and publish channel
+3. Put your IDs in `wrangler.toml`
+4. Run `npm run publish` :)
 
 ## Example
 ### New Incident
