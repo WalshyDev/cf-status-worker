@@ -23,7 +23,9 @@ export function getDescription(incident: Incident) {
   for (const update of incident.incident_updates) {
     const time = new Date(update.created_at);
 
-    description += `\n**${pascalCase(update.status)}** - _${time.toUTCString()}_\n${update.body}\n`;
+    const ms = Math.floor(time.getTime() / 1000);
+    description += `\n**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)`
+      + `\n${update.body}\n`;
   }
 
   return description.trim();
