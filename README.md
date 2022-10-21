@@ -11,7 +11,8 @@ There are a few steps to the setup but it should hopefully be pretty straightfor
 1. Clone the repo
 2. Edit `src/config.ts` - here you can set the status URL, name of the webhook, avatar and publish channel
 3. Put your IDs in `wrangler.toml`
-4. Add Discord webhook and Discord Bot token with `wrangler secret put DISCORD_WEBHOOK` and `wrangler secret put DISCORD_TOKEN`
+4. Add Discord webhook with `wrangler secret put DISCORD_WEBHOOK`
+4b. (optional) If you want publishing, you'll also need to add a Discord bot token with `wrangler secret put DISCORD_TOKEN`
 5. Run `npm run publish` :)
 
 ## Example
