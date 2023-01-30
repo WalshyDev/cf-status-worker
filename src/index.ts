@@ -12,7 +12,7 @@ export default {
 
       attachDebug(req);
 
-      await this.scheduled(null, env);
+      await this.handleRequest(env);
 
       return new Response('Fired');
     } catch(e) {
