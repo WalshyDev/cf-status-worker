@@ -44,11 +44,12 @@ export default {
         incident.updated_at = new Date().toISOString();
       }
 
-      if (kv === null) {
-        await this.postNew(incident, env);
-      } else {
-        await this.postUpdate(incident, kv, env);
-      }
+      // If we've not seen this before, and it's already resolved, ignore it
+      // This stops us spamming old incidents on first run
+      if (kv === null && incident.status === 'resolved') return;
+
+      if (kv === null) await this.postNew(incident, env);
+      else await this.postUpdate(incident, kv, env);
     }));
 
     return new Response('Ok!');
