@@ -32,7 +32,7 @@ You can use the [Discord API](https://discord.com/developers/docs) to automatica
 
 To get setup:
 
-1. Create a new or use a pre-existing [discord application](https://discord.com/developers/applications).
+1. Create a new or use a pre-existing [Discord Application](https://discord.com/developers/applications).
 2. Make note of your application id listed on the `General Information` page you are brought to. You will need this in step 5 to grant your user the correct permissions.
 3. Add a bot to your newly created application by going under `Settings → Bot` and pressing `Add Bot`.
 4. Copy your `Bot Token` and insert it into your project with `wrangler secret put DISCORD_TOKEN`, being careful to not expose it anywhere else.
