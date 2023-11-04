@@ -24,12 +24,16 @@ export function getDescription(incident: Incident) {
     const time = new Date(update.created_at);
 
     const ms = Math.floor(time.getTime() / 1000);
-    description.push(`**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body.trim()}`);
+    description.push(
+      `**${pascalCase(
+        update.status,
+      )}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body.trim()}`,
+    );
   }
-	
-	// the hack for spacing between description and fields is adding 12 characters to
-	// the description
-	const limit = 4096 - incident.components.length ? 12 : 0;
+
+  // the hack for spacing between description and fields is adding 12 characters to
+  // the description
+  const limit = 4096 - incident.components.length ? 12 : 0;
   return fitIntoLimit(description, limit, "\n");
 }
 
@@ -38,7 +42,13 @@ export function getImpact(incident: Incident): string | null {
     return null;
   }
 
-  return fitIntoLimit(incident.components.map(component => `${component.name} - ${pascalCase(component.status)}`), 1024, "\n");
+  return fitIntoLimit(
+    incident.components.map(
+      (component) => `${component.name} - ${pascalCase(component.status)}`,
+    ),
+    1024,
+    "\n",
+  );
 }
 
 export function pascalCase(str: string): string {
@@ -88,27 +98,34 @@ export function getDebug(): Debug | null {
 // the X is replaced with the actual count
 const hiddenDisclaimer = "\n*And X more*";
 
-export function fitIntoLimit(arr: Array<string>, limit: number, delimiter: string): string {
-	// no need to do anything
-	const allOfThem = arr.join(delimiter);
-	if(allOfThem.length < limit) return allOfThem;
+export function fitIntoLimit(
+  arr: Array<string>,
+  limit: number,
+  delimiter: string,
+): string {
+  // no need to do anything
+  const allOfThem = arr.join(delimiter);
+  if (allOfThem.length < limit) return allOfThem;
 
-	let length = 0;
-	let fitting = [];
-	for(let i = 0; i < arr.length; i++) {
-		const overhead = hiddenDisclaimer.length + (arr.length - i).toString().length - 1;
-		if(length + arr[i].length >= limit - overhead) {
-			if(length === 0) {
-				// if this is the first element, we should slice it instead so we dont end up
-				// with an empty message
-				// we are also adding the unicode … which is just one character!
-				return arr[i].slice(0, limit - 1) + "…";
-			}
-			break;
-		}
-		fitting.push(arr[i]);
-		length += arr[i].length + delimiter.length;
-	}
-	return fitting.join(delimiter) + hiddenDisclaimer.replace(/X/, (arr.length - fitting.length).toString());
+  let length = 0;
+  let fitting = [];
+  for (let i = 0; i < arr.length; i++) {
+    const overhead =
+      hiddenDisclaimer.length + (arr.length - i).toString().length - 1;
+    if (length + arr[i].length >= limit - overhead) {
+      if (length === 0) {
+        // if this is the first element, we should slice it instead so we dont end up
+        // with an empty message
+        // we are also adding the unicode … which is just one character!
+        return arr[i].slice(0, limit - 1) + "…";
+      }
+      break;
+    }
+    fitting.push(arr[i]);
+    length += arr[i].length + delimiter.length;
+  }
+  return (
+    fitting.join(delimiter) +
+    hiddenDisclaimer.replace(/X/, (arr.length - fitting.length).toString())
+  );
 }
-
