@@ -41,6 +41,6 @@ export async function retrieveFromStorage<T>(
 
   // to account for cases where a write failed, we have the timestamp!
   // so we use whatever has the newest timestamp
-  const freshness = parsed.sort((a, b) => a.ts - b.ts);
+  const freshness = parsed.sort((a, b) => b.ts - a.ts);
   return freshness[0].value;
 }
