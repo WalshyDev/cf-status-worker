@@ -6,6 +6,8 @@ declare module globalThis {
 
 interface Env {
   KV: KVNamespace;
+	D1?: D1Database;
+	R2?: R2Bucket;
   DISCORD_WEBHOOK: string;
   DISCORD_TOKEN: string;
 }

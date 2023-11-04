@@ -1,6 +1,7 @@
 import { publishMessage, sendToDiscord } from './discord';
 import { attachDebug } from './utils';
 import Config from './config';
+import { retrieveFromStorage, saveToStorage } from './storage';
 
 export default {
   async fetch(req: Request, env: Env) {
@@ -35,7 +36,7 @@ export default {
     const json = await res.json<IncidentResponse>();
 
     await Promise.all(json.incidents.map(async incident => {
-      const kv = await env.KV.get<Incident>(incident.id, 'json');
+      const kv = await retrieveFromStorage<Incident>(env, incident.id);
 
       console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
 
@@ -62,8 +63,8 @@ export default {
     if (messageId !== null) {
       incident.messageId = messageId;
     }
-    // Update KV
-    await env.KV.put(incident.id, JSON.stringify(incident));
+    // Update storage
+    await saveToStorage(env, incident.id, incident);
 
     // Check if we can publish
     if (messageId !== null && Config.PUBLISH_CHANNEL_ID !== '') {
@@ -90,7 +91,7 @@ export default {
       console.log('Updating incident:', incident.id);
 
       // Update KV
-      await env.KV.put(incident.id, JSON.stringify(incident));
+      await saveToStorage(env, incident.id, incident);
       // Update Discord
       await sendToDiscord(incident, env);
     }
