@@ -38,6 +38,10 @@ export async function retrieveFromStorage<T>(
       parsed.push(JSON.parse(value.value));
     } catch {}
   }
+  if (!parsed.length) {
+    console.error("all data stores hold corrupted data, somehow...", values);
+    return null;
+  }
 
   // to account for cases where a write failed, we have the timestamp!
   // so we use whatever has the newest timestamp
