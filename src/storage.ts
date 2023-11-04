@@ -21,7 +21,7 @@ export async function retrieveFromStorage<T>(
   const rawValues = await Promise.allSettled([
     env.KV && env.KV.get(key),
     env.D1 &&
-      env.D1.prepare(`SELECT value WHERE key = ?`).bind(key).first("value"),
+      env.D1.prepare(`SELECT value FROM KV WHERE key = ?`).bind(key).first("value"),
     env.R2 && env.R2.get(key).then((object) => object && object.text()),
   ]);
   const values = rawValues.filter(
