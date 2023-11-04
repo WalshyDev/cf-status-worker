@@ -15,6 +15,25 @@ There are a few steps to the setup but it should hopefully be pretty straightfor
   4b. (optional) If you want publishing, you'll also need to add a Discord bot token with `wrangler secret put DISCORD_TOKEN`
 5. Run `npm run publish` :)
 
+## Data redundancy
+
+This worker is using KV as its main store, but that can go down, so you can additionally
+save data to R2 or D1.
+
+```toml
+[[d1_databases]]
+binding = "D1"
+database_name = ""
+database_id = ""
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = ""
+```
+
+To setup D1, you need to run the following SQL statement:
+`CREATE TABLE IF NOT EXISTS KV (key TEXT UNIQUE, value TEXT)`
+
 ## Example
 ### New Incident
 ![New Incident](https://user-images.githubusercontent.com/8492901/131903623-352dd6ec-bd7f-470f-9468-4a271c4ddc69.png)
