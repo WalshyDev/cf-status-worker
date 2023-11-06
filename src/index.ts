@@ -1,6 +1,7 @@
 import { publishMessage, sendToDiscord } from './discord';
 import { attachDebug } from './utils';
 import Config from './config';
+import { retrieveFromStorage, saveToStorage } from './storage';
 
 export default {
   async fetch(req: Request, env: Env) {
@@ -35,19 +36,19 @@ export default {
     const json = await res.json<IncidentResponse>();
 
     await Promise.all(json.incidents.map(async incident => {
-      const kv = await env.KV.get<Incident>(incident.id, 'json');
+      const stored = await retrieveFromStorage<Incident>(env, incident.id);
 
-      console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
+      console.log('-----\nIncident ' + incident.id + ' in storage: ' + (stored !== null) + '\n-----');
 
       if (globalThis.DEBUG?.updateIncident === incident.id) {
         // Set update to now so we force an update
         incident.updated_at = new Date().toISOString();
       }
 
-      if (kv === null) {
+      if (stored === null) {
         await this.postNew(incident, env);
       } else {
-        await this.postUpdate(incident, kv, env);
+        await this.postUpdate(incident, stored, env);
       }
     }));
 
@@ -62,8 +63,8 @@ export default {
     if (messageId !== null) {
       incident.messageId = messageId;
     }
-    // Update KV
-    await env.KV.put(incident.id, JSON.stringify(incident));
+    // Update storage
+    await saveToStorage(env, incident.id, incident);
 
     // Check if we can publish
     if (messageId !== null && Config.PUBLISH_CHANNEL_ID !== '') {
@@ -89,8 +90,8 @@ export default {
     if (incident.updated_at !== cachedIncident.updated_at) {
       console.log('Updating incident:', incident.id);
 
-      // Update KV
-      await env.KV.put(incident.id, JSON.stringify(incident));
+      // Update storage 
+      await saveToStorage(env, incident.id, incident);
       // Update Discord
       await sendToDiscord(incident, env);
     }
