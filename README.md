@@ -17,7 +17,7 @@ There are a few steps to the setup but it should hopefully be pretty straightfor
 
 ## Data redundancy
 
-This worker is using KV as its main store, but that can go down, so you can additionally
+This worker is using KV as its main store, but if that was to suffer a problem, you can additionally
 save data to R2 or D1.
 
 ```toml
