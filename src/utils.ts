@@ -17,18 +17,40 @@ export function getStatusColor(status: IncidentStatus) {
   return 0;
 }
 
-export function getDescription(incident: Incident) {
-  let description = '';
+function getTruncated(items: string[], joiner: string, suffix: string, length: number) {
+  if (items.join(joiner).length <= length) return items.join(joiner);
 
-  for (const update of incident.incident_updates) {
-    const time = new Date(update.created_at);
-
-    const ms = Math.floor(time.getTime() / 1000);
-    description += `\n**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)`
-      + `\n${update.body}\n`;
+  const truncated = [ ...items ];
+  while (truncated.join(joiner).length + suffix.length > length) {
+    if (truncated.length === 1) {
+      const suffixNewline = suffix.startsWith('\n');
+      truncated[0] = truncated[0].slice(0, length - suffix.length - (suffixNewline ? 3 : 0));
+      truncated[0] = truncated[0].slice(0, truncated[0].lastIndexOf(' ')) + (suffixNewline ? ' ...' : ' ');
+    } else {
+      truncated.pop();
+    }
   }
 
-  return description.trim();
+  return truncated.join(joiner) + suffix;
+}
+
+export function getDescription(incident: Incident, spacing: boolean) {
+  // We want the most recent updates first
+  const sorted = [ ...incident.incident_updates ].sort((a, b) => {
+    const aTime = new Date(a.created_at).getTime();
+    const bTime = new Date(b.created_at).getTime();
+    return bTime - aTime;
+  });
+
+  const updates = sorted.map(update => {
+    const time = new Date(update.created_at);
+    const ms = Math.floor(time.getTime() / 1000);
+    return `**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body}`;
+  });
+
+  // Hack: We want a bit of spacing between the statuses and the impact field
+  const spacer = spacing ? '\n** **\n** **' : '';
+  return getTruncated(updates, '\n\n', `\n\n... [view more updates](${getIncidentLink(incident)})`, 4096 - spacer.length) + spacer;
 }
 
 export function getImpact(incident: Incident, components: Component[]): string | null {
@@ -38,11 +60,13 @@ export function getImpact(incident: Incident, components: Component[]): string |
     ? { ...acc, [component.id]: component }
     : acc, {} as { [id: string]: Component });
 
-  return incident.components.map(component => [
+  const impacted = incident.components.map(component => [
     component.group_id && groups[component.group_id].name,
     component.name,
     pascalCase(component.status),
-  ].filter(Boolean).join(' - ')).join('\n');
+  ].filter(Boolean).join(' - '));
+
+  return getTruncated(impacted, '\n', `\n\n... [view full impact](${getIncidentLink(incident)})`, 1024);
 }
 
 export function pascalCase(str: string): string {
