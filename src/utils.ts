@@ -45,7 +45,7 @@ export function getDescription(incident: Incident, spacing: boolean) {
   const updates = sorted.map(update => {
     const time = new Date(update.created_at);
     const ms = Math.floor(time.getTime() / 1000);
-    return `**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body}`;
+    return `**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body.replace(/\n([\u200b\u200c]*\n)+/ug, '\n\n').trim()}`;
   });
 
   // Hack: We want a bit of spacing between the statuses and the impact field
