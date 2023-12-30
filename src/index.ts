@@ -34,20 +34,26 @@ export default {
     const res = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`)
     const json = await res.json<IncidentResponse>();
 
-    await Promise.all(json.incidents.map(async incident => {
-      const kv = await env.KV.get<Incident>(incident.id, 'json');
+    // Track if this is the first run, so we can ignore resolved incidents
+    const firstRun = await env.KV.get('firstRun', 'text') === null;
+    if (firstRun) await env.KV.put('firstRun', new Date().toISOString());
 
+    await Promise.all(json.incidents.map(async incident => {
+      const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
       console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
+
+      // On the first run, ignore any incidents that are already resolved
+      // We'll store them as skipped so we don't keep checking them
+      if (firstRun && incident.status === 'resolved') {
+        await env.KV.put(incident.id, JSON.stringify({ skipped: true }));
+        return;
+      }
+      if (kv && 'skipped' in kv) return;
 
       if (globalThis.DEBUG?.updateIncident === incident.id) {
         // Set update to now so we force an update
         incident.updated_at = new Date().toISOString();
       }
-
-      // If we've not seen this before, and it's already resolved, ignore it
-      // This stops us spamming old incidents on first run
-      if (kv === null && incident.status === 'resolved') return;
-
       if (kv === null) await this.postNew(incident, env);
       else await this.postUpdate(incident, kv, env);
     }));

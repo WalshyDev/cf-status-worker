@@ -46,6 +46,8 @@ interface Incident {
   messageId?: string;
 }
 
+type StoredIncident = Incident | { skipped: true };
+
 interface IncidentUpdate {
   id: string;
   status: IncidentStatus;
