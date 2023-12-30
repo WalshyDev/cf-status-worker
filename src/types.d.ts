@@ -15,6 +15,11 @@ interface IncidentResponse {
   incidents: Incident[];
 }
 
+interface ComponentResponse {
+  page: Page;
+  components: Component[];
+}
+
 interface Page {
   id: string;
   name: string;
@@ -66,7 +71,7 @@ interface ComponentUpdate {
   new_status: ComponentStatus;
 }
 
-interface Component {
+interface CoreComponent {
   id: string;
   name: string;
   status: ComponentStatus;
@@ -75,12 +80,26 @@ interface Component {
   position: number;
   description: string | null;
   showcase: boolean;
-  start_date: string;
-  group_id: string;
+  start_date: string | null;
+  group_id: string | null;
   page_id: string;
   group: boolean;
   only_show_if_degraded: boolean;
 }
+
+interface ComponentIndividual extends CoreComponent {
+  start_date: string;
+  group: false;
+}
+
+interface ComponentGroup extends CoreComponent {
+  start_date: null;
+  group_id: null;
+  group: true;
+  components: string[];
+}
+
+type Component = ComponentIndividual | ComponentGroup;
 
 interface DiscordResponse {
   id: string;

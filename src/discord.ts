@@ -1,7 +1,7 @@
 import { getDescription, getImpact, getIncidentLink, getStatusColor } from './utils';
 import Config from './config';
 
-export async function sendToDiscord(incident: Incident, env: Env): Promise<string | null> {
+export async function sendToDiscord(incident: Incident, components: Component[], env: Env): Promise<string | null> {
   if (Config.EXCLUDED_STATUSES.includes(incident.status)) {
     return null;
   }
@@ -9,7 +9,7 @@ export async function sendToDiscord(incident: Incident, env: Env): Promise<strin
   const fields: { name: string, value: string, inline?: boolean }[] = [];
 
   let description = getDescription(incident);
-  const impact = getImpact(incident);
+  const impact = getImpact(incident, components);
 
   if (impact !== null) {
     fields.push({

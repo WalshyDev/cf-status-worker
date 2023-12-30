@@ -31,12 +31,18 @@ export function getDescription(incident: Incident) {
   return description.trim();
 }
 
-export function getImpact(incident: Incident): string | null {
-  if (incident.components.length === 0) {
-    return null;
-  }
+export function getImpact(incident: Incident, components: Component[]): string | null {
+  if (incident.components.length === 0) return null;
 
-  return incident.components.map(component => `${component.name} - ${pascalCase(component.status)}`).join('\n');
+  const groups = components.reduce((acc, component) => component.group
+    ? { ...acc, [component.id]: component }
+    : acc, {} as { [id: string]: Component });
+
+  return incident.components.map(component => [
+    component.group_id && groups[component.group_id].name,
+    component.name,
+    pascalCase(component.status),
+  ].filter(Boolean).join(' - ')).join('\n');
 }
 
 export function pascalCase(str: string): string {
