@@ -17,21 +17,28 @@ export function getStatusColor(status: IncidentStatus) {
   return 0;
 }
 
-function getTruncated(items: string[], joiner: string, suffix: string, length: number) {
+function getTruncated(items: string[], joiner: string, suffix: string | ((removed: string[]) => string), length: number) {
   if (items.join(joiner).length <= length) return items.join(joiner);
 
   const truncated = [ ...items ];
-  while (truncated.join(joiner).length + suffix.length > length) {
+  const removed: string[] = [];
+  
+  const getSuffix = () => typeof(suffix) === 'function' ? suffix(removed) : suffix;
+  let computedSuffix = getSuffix();
+
+  while (truncated.join(joiner).length + computedSuffix.length > length) {
     if (truncated.length === 1) {
-      const suffixNewline = suffix.startsWith('\n');
-      truncated[0] = truncated[0].slice(0, length - suffix.length - (suffixNewline ? 3 : 0));
+      const suffixNewline = computedSuffix.startsWith('\n');
+      truncated[0] = truncated[0].slice(0, length - computedSuffix.length - (suffixNewline ? 3 : 0));
       truncated[0] = truncated[0].slice(0, truncated[0].lastIndexOf(' ')) + (suffixNewline ? ' ...' : ' ');
     } else {
-      truncated.pop();
+      removed.unshift(truncated.pop()!);
     }
+
+    computedSuffix = getSuffix();
   }
 
-  return truncated.join(joiner) + suffix;
+  return truncated.join(joiner) + computedSuffix;
 }
 
 export function getDescription(incident: Incident, spacing: boolean) {
@@ -50,7 +57,8 @@ export function getDescription(incident: Incident, spacing: boolean) {
 
   // Hack: We want a bit of spacing between the statuses and the impact field
   const spacer = spacing ? '\n** **\n** **' : '';
-  return getTruncated(updates, '\n\n', `\n\n... [view more updates](${getIncidentLink(incident)})`, 4096 - spacer.length) + spacer;
+  const suffix = (removed: string[]) => `\n\n... [and ${removed.length.toLocaleString()} more update${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  return getTruncated(updates, '\n\n', suffix, 4096 - spacer.length) + spacer;
 }
 
 export function getImpact(incident: Incident, components: Component[]): string | null {
@@ -66,7 +74,8 @@ export function getImpact(incident: Incident, components: Component[]): string |
     pascalCase(component.status),
   ].filter(Boolean).join(' - '));
 
-  return getTruncated(impacted, '\n', `\n\n... [view full impact](${getIncidentLink(incident)})`, 1024);
+  const suffix = (removed: string[]) => `\n\n... [and ${removed.length.toLocaleString()} more service${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  return getTruncated(impacted, '\n', suffix, 1024);
 }
 
 export function pascalCase(str: string): string {
