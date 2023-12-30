@@ -29,8 +29,8 @@ function getTruncated(items: string[], joiner: string, suffix: string | ((remove
   while (truncated.join(joiner).length + computedSuffix.length > length) {
     if (truncated.length === 1) {
       const suffixNewline = computedSuffix.startsWith('\n');
-      truncated[0] = truncated[0].slice(0, length - computedSuffix.length - (suffixNewline ? 3 : 0));
-      truncated[0] = truncated[0].slice(0, truncated[0].lastIndexOf(' ')) + (suffixNewline ? ' ...' : ' ');
+      truncated[0] = truncated[0].slice(0, length - computedSuffix.length - (suffixNewline ? 1 : 0));
+      truncated[0] = truncated[0].slice(0, truncated[0].lastIndexOf(' ')) + (suffixNewline ? ' …' : ' ');
     } else {
       removed.unshift(truncated.pop()!);
     }
@@ -57,7 +57,7 @@ export function getDescription(incident: Incident, spacing: boolean) {
 
   // Hack: We want a bit of spacing between the statuses and the impact field
   const spacer = spacing ? '\n** **\n** **' : '';
-  const suffix = (removed: string[]) => `\n\n... [and ${removed.length.toLocaleString()} more update${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  const suffix = (removed: string[]) => `\n\n… [and ${removed.length.toLocaleString()} more update${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
   return getTruncated(updates, '\n\n', suffix, 4096 - spacer.length) + spacer;
 }
 
@@ -74,7 +74,7 @@ export function getImpact(incident: Incident, components: Component[]): string |
     pascalCase(component.status),
   ].filter(Boolean).join(' - '));
 
-  const suffix = (removed: string[]) => `\n\n... [and ${removed.length.toLocaleString()} more service${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  const suffix = (removed: string[]) => `\n\n… [and ${removed.length.toLocaleString()} more service${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
   return getTruncated(impacted, '\n', suffix, 1024);
 }
 
