@@ -18,15 +18,15 @@ export function getStatusColor(status: IncidentStatus) {
 }
 
 function getTruncated(items: string[], joiner: string, suffix: string | ((removed: string[]) => string), length: number) {
-  if (items.join(joiner).length <= length) return items.join(joiner);
-
   const truncated = [ ...items ];
+  let computedTruncated = truncated.join(joiner);
+  if (computedTruncated.length <= length) return computedTruncated;
+
   const removed: string[] = [];
-  
   const getSuffix = () => typeof(suffix) === 'function' ? suffix(removed) : suffix;
   let computedSuffix = getSuffix();
 
-  while (truncated.join(joiner).length + computedSuffix.length > length) {
+  while (computedTruncated.length + computedSuffix.length > length) {
     if (truncated.length === 1) {
       const suffixNewline = computedSuffix.startsWith('\n');
       truncated[0] = truncated[0].slice(0, length - computedSuffix.length - (suffixNewline ? 1 : 0));
@@ -35,10 +35,11 @@ function getTruncated(items: string[], joiner: string, suffix: string | ((remove
       removed.unshift(truncated.pop()!);
     }
 
+    computedTruncated = truncated.join(joiner);
     computedSuffix = getSuffix();
   }
 
-  return truncated.join(joiner) + computedSuffix;
+  return computedTruncated + computedSuffix;
 }
 
 export function getDescription(incident: Incident, spacing: boolean) {
