@@ -8,18 +8,13 @@ export async function sendToDiscord(incident: Incident, components: Component[],
 
   const fields: { name: string, value: string, inline?: boolean }[] = [];
 
-  let description = getDescription(incident);
   const impact = getImpact(incident, components);
-
   if (impact !== null) {
     fields.push({
       name: 'Impacted Services',
       value: impact,
       inline: false,
     });
-
-    // Hack: We want a bit of spacing between the statuses and the impact field.
-    description += '\n** **\n** **';
   }
 
   const messageId = incident.messageId;
@@ -32,7 +27,7 @@ export async function sendToDiscord(incident: Incident, components: Component[],
       type: 'rich',
       title: `${incident.name}`,
       url: getIncidentLink(incident),
-      description,
+      description: getDescription(incident, impact !== null),
       timestamp: incident.started_at,
       color: getStatusColor(incident.status),
       fields,
