@@ -7,23 +7,30 @@ We use this in the [Cloudflare Discord](https://discord.gg/cloudflaredev), come 
 
 ## How do I set this up?
 
-There are a few steps to the setup but it should hopefully be pretty straightforward:
+There are a few steps to the setup, but it should hopefully be pretty straightforward:
 
 1. Clone the repo
-2. Edit `src/config.ts` - here you can set the status URL, name of the webhook, avatar and publish channel
-3. Put your IDs in `wrangler.toml`
-4. Add Discord webhook with `wrangler secret put DISCORD_WEBHOOK` \
-  4b. (optional) If you want publishing, you'll also need to add a Discord bot token with `wrangler secret put DISCORD_TOKEN`
-5. Run `npm run publish` :)
+2. Edit `src/config.ts` to set the status URL, name of the webhook, avatar and publish channel
+3. Authenticate Wrangler with `npx wrangler login`, or set the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` environment variables (or put them in `.env`)
+4. Put your account ID in `wrangler.toml` (you can get this from `npx wrangler whoami`)
+5. Create the KV namespace with `npx wrangler kv:namespace create KV`
+6. Put the namespace ID in `wrangler.toml`
+7. Add Discord webhook with `npx wrangler secret put DISCORD_WEBHOOK`
+   1. (optional) If you want publishing, you'll also need to add a Discord bot token with `npx wrangler secret put DISCORD_TOKEN`
+8. Run `npm run publish` :)
 
 ## Example
+
 ### New Incident
+
 ![New Incident](https://user-images.githubusercontent.com/8492901/131903623-352dd6ec-bd7f-470f-9468-4a271c4ddc69.png)
 
 ### In Progress Incident
+
 ![In_Progress Incident](https://user-images.githubusercontent.com/8492901/131903520-5aabc84d-786a-4fb8-841c-f7efda00e316.png)
 
 ### Resolved Incident
+
 ![Resolved Incident](https://user-images.githubusercontent.com/8492901/131903522-a4cdc4bd-ad6e-4d1d-b6dd-65950cca9b45.png)
 
 ## Setting Up Automated Publishing
