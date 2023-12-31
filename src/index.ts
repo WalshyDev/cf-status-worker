@@ -36,7 +36,9 @@ export default {
 
     // Track if this is the first run, so we can ignore resolved incidents
     const firstRun = await env.KV.get('firstRun') === null;
-    if (firstRun) await env.KV.put('firstRun', new Date().toISOString());
+    if (firstRun) {
+      await env.KV.put('firstRun', new Date().toISOString());
+    }
 
     await Promise.all(json.incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
@@ -54,8 +56,11 @@ export default {
         // Set update to now so we force an update
         incident.updated_at = new Date().toISOString();
       }
-      if (kv === null) await this.postNew(incident, env);
-      else await this.postUpdate(incident, kv, env);
+      if (kv === null) {
+        await this.postNew(incident, env);
+      } else {
+        await this.postUpdate(incident, kv, env);
+      }
     }));
 
     return new Response('Ok!');
