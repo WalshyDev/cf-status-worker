@@ -7,10 +7,17 @@
     "dev": "wrangler dev src/index.ts",
     "publish": "wrangler publish"
   },
-  "keywords": ["cloudflare", "workers", "statuspage", "status", "cloudflare workers"],
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "statuspage",
+    "status",
+    "cloudflare workers"
+  ],
   "author": "Daniel Walsh (@WalshyDev)",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/workers-types": "^3.16.0"
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "wrangler": "^2.20.2"
   }
 }
