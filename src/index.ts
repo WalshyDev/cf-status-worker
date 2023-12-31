@@ -46,7 +46,7 @@ export default {
 
       // On the first run, ignore any incidents that are already resolved
       // We'll store them as skipped so we don't keep checking them
-      if (firstRun && incident.status === 'resolved') {
+      if (!kv && firstRun && incident.status === 'resolved') {
         await env.KV.put(incident.id, JSON.stringify({ skipped: true }));
         return;
       }
