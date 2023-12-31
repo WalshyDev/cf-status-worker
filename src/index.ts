@@ -35,7 +35,7 @@ export default {
     const json = await res.json<IncidentResponse>();
 
     // Track if this is the first run, so we can ignore resolved incidents
-    const firstRun = await env.KV.get('firstRun', 'text') === null;
+    const firstRun = await env.KV.get('firstRun') === null;
     if (firstRun) await env.KV.put('firstRun', new Date().toISOString());
 
     await Promise.all(json.incidents.map(async incident => {
