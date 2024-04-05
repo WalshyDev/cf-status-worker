@@ -31,8 +31,18 @@ export default {
   },
 
   async handleRequest(env: Env) {
-    const res = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`)
-    const json = await res.json<IncidentResponse>();
+    const incidents = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch incidents');
+        return res.json<IncidentResponse>();
+      })
+      .then(res => res.incidents);
+    const components = await fetch(`${Config.STATUS_URL}/api/v2/components.json`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch components');
+        return res.json<ComponentResponse>();
+      })
+      .then(res => res.components);
 
     // Track if this is the first run, so we can ignore resolved incidents
     const firstRun = await env.KV.get('firstRun') === null;
@@ -40,7 +50,7 @@ export default {
       await env.KV.put('firstRun', new Date().toISOString());
     }
 
-    await Promise.all(json.incidents.map(async incident => {
+    await Promise.all(incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
       console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
 
@@ -57,18 +67,18 @@ export default {
         incident.updated_at = new Date().toISOString();
       }
       if (kv === null) {
-        await this.postNew(incident, env);
+        await this.postNew(incident, components, env);
       } else {
-        await this.postUpdate(incident, kv, env);
+        await this.postUpdate(incident, kv, components, env);
       }
     }));
 
     return new Response('Ok!');
   },
 
-  async postNew(incident: Incident, env: Env) {
+  async postNew(incident: Incident, components: Component[], env: Env) {
     // Send to Discord and grab the message ID
-    const messageId = await sendToDiscord(incident, env);
+    const messageId = await sendToDiscord(incident, components, env);
 
     // Update the incident with the message ID
     if (messageId !== null) {
@@ -88,7 +98,7 @@ export default {
     }
   },
 
-  async postUpdate(incident: Incident, cachedIncident: Incident, env: Env) {
+  async postUpdate(incident: Incident, cachedIncident: Incident, components: Component[], env: Env) {
     // If there's no update or the cached incident doesn't have a message ID. There's no update needed
     if (incident.updated_at === null || !cachedIncident.messageId) {
       return;
@@ -104,7 +114,7 @@ export default {
       // Update KV
       await env.KV.put(incident.id, JSON.stringify(incident));
       // Update Discord
-      await sendToDiscord(incident, env);
+      await sendToDiscord(incident, components, env);
     }
   },
 }

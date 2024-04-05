@@ -17,26 +17,66 @@ export function getStatusColor(status: IncidentStatus) {
   return 0;
 }
 
-export function getDescription(incident: Incident) {
-  let description = '';
+function getTruncated(items: string[], joiner: string, suffix: string | ((removed: string[]) => string), length: number) {
+  const truncated = [ ...items ];
+  let computedTruncated = truncated.join(joiner);
+  if (computedTruncated.length <= length) return computedTruncated;
 
-  for (const update of incident.incident_updates) {
-    const time = new Date(update.created_at);
+  const removed: string[] = [];
+  const getSuffix = () => typeof(suffix) === 'function' ? suffix(removed) : suffix;
+  let computedSuffix = getSuffix();
 
-    const ms = Math.floor(time.getTime() / 1000);
-    description += `\n**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)`
-      + `\n${update.body}\n`;
+  while (computedTruncated.length + computedSuffix.length > length) {
+    if (truncated.length === 1) {
+      const suffixNewline = computedSuffix.startsWith('\n');
+      truncated[0] = truncated[0].slice(0, length - computedSuffix.length - (suffixNewline ? 1 : 0));
+      truncated[0] = truncated[0].slice(0, truncated[0].lastIndexOf(' ')) + (suffixNewline ? ' …' : ' ');
+    } else {
+      removed.unshift(truncated.pop()!);
+    }
+
+    computedTruncated = truncated.join(joiner);
+    computedSuffix = getSuffix();
   }
 
-  return description.trim();
+  return computedTruncated + computedSuffix;
 }
 
-export function getImpact(incident: Incident): string | null {
-  if (incident.components.length === 0) {
-    return null;
-  }
+export function getDescription(incident: Incident, spacing: boolean) {
+  // We want the most recent updates first
+  const sorted = [ ...incident.incident_updates ].sort((a, b) => {
+    const aTime = new Date(a.created_at).getTime();
+    const bTime = new Date(b.created_at).getTime();
+    return bTime - aTime;
+  });
 
-  return incident.components.map(component => `${component.name} - ${pascalCase(component.status)}`).join('\n');
+  const updates = sorted.map(update => {
+    const time = new Date(update.created_at);
+    const ms = Math.floor(time.getTime() / 1000);
+    return `**${pascalCase(update.status)}** - <t:${ms}:F> (<t:${ms}:R>)\n${update.body.replace(/\n([\u200b\u200c]*\n)+/ug, '\n\n').trim()}`;
+  });
+
+  // Hack: We want a bit of spacing between the statuses and the impact field
+  const spacer = spacing ? '\n** **\n** **' : '';
+  const suffix = (removed: string[]) => `\n\n… [and ${removed.length.toLocaleString()} more update${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  return getTruncated(updates, '\n\n', suffix, 4096 - spacer.length) + spacer;
+}
+
+export function getImpact(incident: Incident, components: Component[]): string | null {
+  if (incident.components.length === 0) return null;
+
+  const groups = components.reduce((acc, component) => component.group
+    ? { ...acc, [component.id]: component }
+    : acc, {} as { [id: string]: Component });
+
+  const impacted = incident.components.map(component => [
+    component.group_id && groups[component.group_id].name,
+    component.name,
+    pascalCase(component.status),
+  ].filter(Boolean).join(' - '));
+
+  const suffix = (removed: string[]) => `\n\n… [and ${removed.length.toLocaleString()} more service${removed.length === 1 ? '' : 's'}](${getIncidentLink(incident)})`;
+  return getTruncated(impacted, '\n', suffix, 1024);
 }
 
 export function pascalCase(str: string): string {
