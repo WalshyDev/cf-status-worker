@@ -14,7 +14,7 @@ export default {
 
       await this.handleRequest(env);
 
-      return new Response('Fired');
+      return new Response('Ok');
     } catch(e) {
       // @ts-ignore
       return new Response(e.stack, { status: 500 });
@@ -22,12 +22,7 @@ export default {
   },
 
   async scheduled(_: ScheduledController | null, env: Env) {
-    try {
-      await this.handleRequest(env);
-    } catch(e) {
-      // @ts-ignore
-      return new Response(e.stack, { status: 500 });
-    }
+    await this.handleRequest(env);
   },
 
   async handleRequest(env: Env) {
@@ -50,7 +45,8 @@ export default {
       await env.KV.put('firstRun', new Date().toISOString());
     }
 
-    await Promise.all(incidents.map(async incident => {
+    // Process all incidents
+    const res = await Promise.allSettled(incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
       console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
 
@@ -72,8 +68,17 @@ export default {
         await this.postUpdate(incident, kv, components, env);
       }
     }));
+    console.log(`Processed ${res.length} incidents`);
 
-    return new Response('Ok!');
+    // Log any failed incidents and throw an error
+    let failed = false;
+    for (const r of res) {
+      if (r.status === 'rejected') {
+        console.error(r.reason);
+        failed = true;
+      }
+    }
+    if (failed) throw new Error('One or more incidents failed to update');
   },
 
   async postNew(incident: Incident, components: Component[], env: Env) {
@@ -108,7 +113,7 @@ export default {
 
       // Update KV
       await env.KV.put(incident.id, JSON.stringify(incident));
-      
+
       // Update Discord
       await sendToDiscord(incident, components, env);
     }
