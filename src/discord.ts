@@ -46,18 +46,18 @@ export async function sendToDiscord(incident: Incident, components: Component[],
   });
   
   const txt = await res.text();
-
   console.log(`  Discord response: ${res.status} - ${txt}`);
 
   if (res.status === 200) {
     // Return the message ID
     const body: DiscordResponse = JSON.parse(txt);
-    console.log(`  Discord message ID: ${body.id}`);
-    return body.id;
-  } else {
-    // Error :(
-    return null;
+    if (body.id) {
+      console.log(`  Discord message ID: ${body.id}`);
+      return body.id;
+    }
   }
+  
+  throw new Error(`Failed to send message to Discord. Status: ${res.status} - Body: ${txt}`);
 }
 
 export async function publishMessage(messageId: string, env: Env) {

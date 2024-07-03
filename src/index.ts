@@ -81,9 +81,8 @@ export default {
     const messageId = await sendToDiscord(incident, components, env);
 
     // Update the incident with the message ID
-    if (messageId !== null) {
-      incident.messageId = messageId;
-    }
+    if (messageId !== null) incident.messageId = messageId;
+
     // Update KV
     await env.KV.put(incident.id, JSON.stringify(incident));
 
@@ -91,10 +90,6 @@ export default {
     if (messageId !== null && Config.PUBLISH_CHANNEL_ID !== '') {
       // Publish the message
       await publishMessage(messageId, env);
-    }
-
-    if (messageId === null) {
-      console.error('SANITY CHECK: Message ID from postNew is null!!');
     }
   },
 
@@ -113,6 +108,7 @@ export default {
 
       // Update KV
       await env.KV.put(incident.id, JSON.stringify(incident));
+      
       // Update Discord
       await sendToDiscord(incident, components, env);
     }
