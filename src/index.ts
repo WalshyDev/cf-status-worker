@@ -68,17 +68,8 @@ export default {
         await this.postUpdate(incident, kv, components, env);
       }
     }));
-    console.log(`Processed ${res.length} incidents`);
-
-    // Log any failed incidents and throw an error
-    let failed = false;
-    for (const r of res) {
-      if (r.status === 'rejected') {
-        console.error(r.reason);
-        failed = true;
-      }
-    }
-    if (failed) throw new Error('One or more incidents failed to update');
+    console.log(`Processed ${res.length} incidents (${res.filter(r => r.status === 'fulfilled').length} successful)`);
+    res.forEach(r => r.status === 'rejected' && console.error(r.reason));
   },
 
   async postNew(incident: Incident, components: Component[], env: Env) {
