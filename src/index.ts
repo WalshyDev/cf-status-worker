@@ -48,7 +48,7 @@ export default {
     // Process all incidents
     const res = await Promise.allSettled(incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
-      console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
+      console.log(`[${incident.id}] In KV: ${kv !== null}`)
 
       // On the first run, ignore any incidents that are already resolved
       // We'll store them as skipped so we don't keep checking them
@@ -82,6 +82,8 @@ export default {
   },
 
   async postNew(incident: Incident, components: Component[], env: Env) {
+    console.log(`[${incident.id}] New incident: ${incident.name}`);
+
     // Send to Discord and grab the message ID
     // If the incident status is excluded, we'll get null back
     const messageId = await sendToDiscord(incident, components, env);
@@ -91,7 +93,7 @@ export default {
       incident.messageId = messageId;
 
       // Publish the message if configured
-      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(messageId, env);
+      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(incident, env);
     }
 
     // Update KV
@@ -109,7 +111,7 @@ export default {
 
     // It has been updated so post a new update!
     if (incident.updated_at !== cachedIncident.updated_at) {
-      console.log('Updating incident:', incident.id);
+      console.log(`[${incident.id}] Updated incident: ${incident.name}`);
 
       // Update Discord
       await sendToDiscord(incident, components, env);
