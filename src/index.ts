@@ -83,19 +83,19 @@ export default {
 
   async postNew(incident: Incident, components: Component[], env: Env) {
     // Send to Discord and grab the message ID
+    // If the incident status is excluded, we'll get null back
     const messageId = await sendToDiscord(incident, components, env);
 
     // Update the incident with the message ID
-    if (messageId !== null) incident.messageId = messageId;
+    if (messageId !== null) {
+      incident.messageId = messageId;
+
+      // Publish the message if configured
+      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(messageId, env);
+    }
 
     // Update KV
     await env.KV.put(incident.id, JSON.stringify(incident));
-
-    // Check if we can publish
-    if (messageId !== null && Config.PUBLISH_CHANNEL_ID !== '') {
-      // Publish the message
-      await publishMessage(messageId, env);
-    }
   },
 
   async postUpdate(incident: Incident, cachedIncident: Incident, components: Component[], env: Env) {
@@ -111,11 +111,11 @@ export default {
     if (incident.updated_at !== cachedIncident.updated_at) {
       console.log('Updating incident:', incident.id);
 
-      // Update KV
-      await env.KV.put(incident.id, JSON.stringify(incident));
-
       // Update Discord
       await sendToDiscord(incident, components, env);
+
+      // Update KV
+      await env.KV.put(incident.id, JSON.stringify(incident));
     }
   },
 }
