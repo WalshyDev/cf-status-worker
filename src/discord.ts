@@ -34,7 +34,7 @@ export async function sendToDiscord(incident: Incident, components: Component[],
     }]
   };
 
-  console.log(`Sending ${update ? 'PATCH' : 'POST'}${update ? ` /messages/${messageId}` : ''} to Discord with body: ${JSON.stringify(reqObj)}`);
+  console.log(`[${incident.id}] Sending ${update ? 'PATCH' : 'POST'}${update ? ` /messages/${messageId}` : ''} to Discord with body: ${JSON.stringify(reqObj)}`);
 
   // Always make sure ?wait=true is there so we get the message back from Discord
   const res = await fetch(env.DISCORD_WEBHOOK + (update ? `/messages/${messageId}?wait=true'` : '?wait=true'), {
@@ -46,37 +46,37 @@ export async function sendToDiscord(incident: Incident, components: Component[],
   });
   
   const txt = await res.text();
-
-  console.log(`  Discord response: ${res.status} - ${txt}`);
+  const log = JSON.stringify({ status: res.status, body: txt, headers: Object.fromEntries(res.headers) });
+  console.log(`[${incident.id}] Discord send response: ${log}`);
 
   if (res.status === 200) {
     // Return the message ID
     const body: DiscordResponse = JSON.parse(txt);
-    console.log(`  Discord message ID: ${body.id}`);
-    return body.id;
-  } else {
-    // Error :(
-    return null;
+    if (body.id) {
+      console.log(`[${incident.id}] Discord message ID: ${body.id}`);
+      return body.id;
+    }
   }
+  
+  throw new Error(`[${incident.id}] Failed to send message to Discord: ${log}`);
 }
 
-export async function publishMessage(messageId: string, env: Env) {
-  const res = await fetch(`https://discord.com/api/v9/channels/${Config.PUBLISH_CHANNEL_ID}/messages/${messageId}/crosspost`, {
+export async function publishMessage(incident: Incident, env: Env) {
+  if (!incident.messageId) return;
+
+  console.log(`[${incident.id}] Sending POST /messages/${incident.messageId}/crosspost to Discord`);
+
+  const res = await fetch(`https://discord.com/api/v9/channels/${Config.PUBLISH_CHANNEL_ID}/messages/${incident.messageId}/crosspost`, {
     method: 'POST',
     headers: {
       Authorization: 'Bot ' + env.DISCORD_TOKEN
     }
   });
+  
+  const txt = await res.text();
+  const log = JSON.stringify({ status: res.status, body: txt, headers: Object.fromEntries(res.headers) });
+  console.log(`[${incident.id}] Discord publish response: ${log}`);
 
-  if (res.ok) {
-    const json = await res.json();
-    console.log('Published', json);
-  } else {
-    let body = 'null';
-    try {
-      body = await res.text();
-    } catch (e) {}
-
-    console.error(`Failed to publish. Status: ${res.status} - Body: ${body}`);
-  }
+  if (res.ok) return;
+  throw new Error(`[${incident.id}] Failed to publish message to Discord: ${log}`);
 }

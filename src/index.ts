@@ -14,7 +14,7 @@ export default {
 
       await this.handleRequest(env);
 
-      return new Response('Fired');
+      return new Response('Ok');
     } catch(e) {
       // @ts-ignore
       return new Response(e.stack, { status: 500 });
@@ -22,12 +22,7 @@ export default {
   },
 
   async scheduled(_: ScheduledController | null, env: Env) {
-    try {
-      await this.handleRequest(env);
-    } catch(e) {
-      // @ts-ignore
-      return new Response(e.stack, { status: 500 });
-    }
+    await this.handleRequest(env);
   },
 
   async handleRequest(env: Env) {
@@ -50,9 +45,10 @@ export default {
       await env.KV.put('firstRun', new Date().toISOString());
     }
 
-    await Promise.all(incidents.map(async incident => {
+    // Process all incidents
+    const res = await Promise.allSettled(incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
-      console.log('-----\nIncident ' + incident.id + ' in KV: ' + (kv !== null) + '\n-----');
+      console.log(`[${incident.id}] In KV: ${kv !== null}`)
 
       // On the first run, ignore any incidents that are already resolved
       // We'll store them as skipped so we don't keep checking them
@@ -72,30 +68,27 @@ export default {
         await this.postUpdate(incident, kv, components, env);
       }
     }));
-
-    return new Response('Ok!');
+    console.log(`Processed ${res.length} incidents (${res.filter(r => r.status === 'fulfilled').length} successful)`);
+    res.forEach(r => r.status === 'rejected' && console.error(r.reason));
   },
 
   async postNew(incident: Incident, components: Component[], env: Env) {
+    console.log(`[${incident.id}] New incident: ${incident.name}`);
+
     // Send to Discord and grab the message ID
+    // If the incident status is excluded, we'll get null back
     const messageId = await sendToDiscord(incident, components, env);
 
     // Update the incident with the message ID
     if (messageId !== null) {
       incident.messageId = messageId;
+
+      // Publish the message if configured
+      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(incident, env);
     }
+
     // Update KV
     await env.KV.put(incident.id, JSON.stringify(incident));
-
-    // Check if we can publish
-    if (messageId !== null && Config.PUBLISH_CHANNEL_ID !== '') {
-      // Publish the message
-      await publishMessage(messageId, env);
-    }
-
-    if (messageId === null) {
-      console.error('SANITY CHECK: Message ID from postNew is null!!');
-    }
   },
 
   async postUpdate(incident: Incident, cachedIncident: Incident, components: Component[], env: Env) {
@@ -109,12 +102,13 @@ export default {
 
     // It has been updated so post a new update!
     if (incident.updated_at !== cachedIncident.updated_at) {
-      console.log('Updating incident:', incident.id);
+      console.log(`[${incident.id}] Updated incident: ${incident.name}`);
+
+      // Update Discord
+      await sendToDiscord(incident, components, env);
 
       // Update KV
       await env.KV.put(incident.id, JSON.stringify(incident));
-      // Update Discord
-      await sendToDiscord(incident, components, env);
     }
   },
 }
