@@ -46,7 +46,8 @@ export async function sendToDiscord(incident: Incident, components: Component[],
   });
   
   const txt = await res.text();
-  console.log(`[${incident.id}] Discord response: ${res.status} - ${txt}`);
+  const log = JSON.stringify({ status: res.status, body: txt, headers: Object.fromEntries(res.headers) });
+  console.log(`[${incident.id}] Discord send response: ${log}`);
 
   if (res.status === 200) {
     // Return the message ID
@@ -57,7 +58,7 @@ export async function sendToDiscord(incident: Incident, components: Component[],
     }
   }
   
-  throw new Error(`[${incident.id}] Failed to send message to Discord. Status: ${res.status} - Body: ${txt}`);
+  throw new Error(`[${incident.id}] Failed to send message to Discord: ${log}`);
 }
 
 export async function publishMessage(incident: Incident, env: Env) {
@@ -73,9 +74,9 @@ export async function publishMessage(incident: Incident, env: Env) {
   });
   
   const txt = await res.text();
-  console.log(`[${incident.id}] Discord response: ${res.status} - ${txt}`);
+  const log = JSON.stringify({ status: res.status, body: txt, headers: Object.fromEntries(res.headers) });
+  console.log(`[${incident.id}] Discord publish response: ${log}`);
 
   if (res.ok) return;
-
-  throw new Error(`[${incident.id}] Failed to publish message to Discord. Status: ${res.status} - Body: ${txt}`);
+  throw new Error(`[${incident.id}] Failed to publish message to Discord: ${log}`);
 }
