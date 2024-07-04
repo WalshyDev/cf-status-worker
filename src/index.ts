@@ -48,7 +48,10 @@ export default {
     // Process all incidents
     const res = await Promise.allSettled(incidents.map(async incident => {
       const kv = await env.KV.get<StoredIncident>(incident.id, 'json');
-      console.log(`[${incident.id}] In KV: ${kv !== null}`)
+      // Log if we did not find the key in KV
+      if (kv === null) {
+        console.log(`[${incident.id}] In KV: ${kv !== null}`)
+      }
 
       // On the first run, ignore any incidents that are already resolved
       // We'll store them as skipped so we don't keep checking them
