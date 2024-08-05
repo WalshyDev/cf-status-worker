@@ -10,6 +10,11 @@ interface Env {
   DISCORD_TOKEN: string;
 }
 
+interface DiscordMessage {
+  content?: string;
+  embeds?: DiscordEmbed[];
+}
+
 interface IncidentResponse {
   page: Page;
   incidents: Incident[];
