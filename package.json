@@ -4,8 +4,7 @@
   "description": "Easily follow status pages and send updates to your Discord server!",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
-    "publish": "wrangler deploy"
+    "dev": "wrangler dev src/index.ts"
   },
   "keywords": [
     "cloudflare",
