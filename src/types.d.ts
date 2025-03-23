@@ -33,7 +33,7 @@ interface Page {
   updated_at: string; 
 }
 
-type IncidentStatus = 'resolved' | 'monitoring' | 'identified' | 'investigating' | 'maintenance' | 'scheduled';
+type IncidentStatus = 'postmortem' | 'resolved' | 'monitoring' | 'identified' | 'investigating' | 'maintenance' | 'scheduled';
 type ComponentStatus = 'operational' | 'partial_outage' | 'degraded_performance';
 type Impact = 'major' | 'minor' | 'none';
 
