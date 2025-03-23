@@ -4,8 +4,7 @@
   "description": "Easily follow status pages and send updates to your Discord server!",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
-    "publish": "wrangler publish"
+    "dev": "wrangler dev src/index.ts"
   },
   "keywords": [
     "cloudflare",
@@ -17,7 +16,7 @@
   "author": "Daniel Walsh (@WalshyDev)",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20231218.0",
-    "wrangler": "^2.20.2"
+    "@cloudflare/workers-types": "^4.20250321.0",
+    "wrangler": "^4.4.0"
   }
 }

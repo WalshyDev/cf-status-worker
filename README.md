@@ -17,7 +17,7 @@ There are a few steps to the setup, but it should hopefully be pretty straightfo
 6. Put the namespace ID in `wrangler.toml`
 7. Add Discord webhook with `npx wrangler secret put DISCORD_WEBHOOK`
    1. (optional) If you want publishing, you'll also need to add a Discord bot token with `npx wrangler secret put DISCORD_TOKEN`
-8. Run `npm run publish` :)
+8. Run `npx wrangler deploy` :)
 
 ## Example
 
