@@ -87,7 +87,7 @@ export default {
       incident.messageId = messageId;
 
       // Publish the message if configured
-      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(incident, env);
+      if (Config.PUBLISH_CHANNEL_ID !== '') await publishMessage(incident, env).catch(console.error);
     }
 
     // Update KV
