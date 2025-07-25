@@ -1,13 +1,13 @@
 import Config from './config';
 
 const statusColors: { [status in IncidentStatus]: number } = {
-  scheduled: 16155167,
-  maintenance: 16155167,
-  investigating: 16711680,
-  identified: 16760576, //15158332
-  monitoring: 16760576,
-  resolved: 32768,
-  postmortem: 32768,
+  scheduled: 0xF6821F,
+  maintenance: 0xF6821F,
+  investigating: 0xFF0000,
+  identified: 0xFFBF00, // 0xE74C3C
+  monitoring: 0xFFBF00,
+  resolved: 0x008000,
+  postmortem: 0x008000,
 };
 
 export function getStatusColor(status: IncidentStatus) {
