@@ -7,6 +7,7 @@ const statusColors: { [status in IncidentStatus]: number } = {
   identified: 16760576, //15158332
   monitoring: 16760576,
   resolved: 32768,
+  postmortem: 32768,
 };
 
 export function getStatusColor(status: IncidentStatus) {
