@@ -2,6 +2,8 @@ import { publishMessage, sendToDiscord } from './discord';
 import { attachDebug } from './utils';
 import Config from './config';
 
+const INCIDENTS_ETAG_KEY = 'incidentsEtag';
+
 export default {
   async fetch(req: Request, env: Env) {
     try {
@@ -26,12 +28,19 @@ export default {
   },
 
   async handleRequest(env: Env) {
-    const incidents = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch incidents');
-        return res.json<IncidentResponse>();
-      })
-      .then(res => res.incidents);
+    const headers: Record<string, string> = {};
+    // A forced debug update needs the full incident list, so skip the conditional request
+    if (!globalThis.DEBUG?.updateIncident) {
+      const etag = await env.KV.get(INCIDENTS_ETAG_KEY);
+      if (etag !== null) headers['If-None-Match'] = etag;
+    }
+
+    const incidentsRes = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`, { headers });
+    // Nothing changed since the last successful run, so skip the downloads, parsing and per-incident KV reads
+    if (incidentsRes.status === 304) return;
+    if (!incidentsRes.ok) throw new Error('Failed to fetch incidents');
+    const { incidents } = await incidentsRes.json<IncidentResponse>();
+
     const components = await fetch(`${Config.STATUS_URL}/api/v2/components.json`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch components');
@@ -73,6 +82,12 @@ export default {
     }));
     console.log(`Processed ${res.length} incidents (${res.filter(r => r.status === 'fulfilled').length} successful)`);
     res.forEach(r => r.status === 'rejected' && console.error(r.reason));
+
+    // Only remember this version once every incident went through, so failures are retried next run
+    const etag = incidentsRes.headers.get('ETag');
+    if (etag && res.every(r => r.status === 'fulfilled')) {
+      await env.KV.put(INCIDENTS_ETAG_KEY, etag);
+    }
   },
 
   async postNew(incident: Incident, components: Component[], env: Env) {
