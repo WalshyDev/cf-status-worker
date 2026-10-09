@@ -28,17 +28,22 @@ export default {
   },
 
   async handleRequest(env: Env) {
-    const headers: Record<string, string> = {};
-    // A forced debug update needs the full incident list, so skip the conditional request
+    let storedEtag: string | null = null;
+    // A forced debug update needs the full incident list, so skip the ETag checks
     if (!globalThis.DEBUG?.updateIncident) {
-      const etag = await env.KV.get(INCIDENTS_ETAG_KEY);
-      if (etag !== null) headers['If-None-Match'] = etag;
+      storedEtag = await env.KV.get(INCIDENTS_ETAG_KEY);
     }
 
+    const headers: Record<string, string> = {};
+    if (storedEtag !== null) headers['If-None-Match'] = storedEtag;
+
     const incidentsRes = await fetch(`${Config.STATUS_URL}/api/v2/incidents.json`, { headers });
-    // Nothing changed since the last successful run, so skip the downloads, parsing and per-incident KV reads
+    const etag = incidentsRes.headers.get('ETag');
+    // Nothing changed since the last successful run, so skip parsing and per-incident KV reads
     if (incidentsRes.status === 304) return;
     if (!incidentsRes.ok) throw new Error('Failed to fetch incidents');
+    // Some Statuspage sites ignore If-None-Match and send a 200 with the same ETag
+    if (etag !== null && etag === storedEtag) return;
     const { incidents } = await incidentsRes.json<IncidentResponse>();
 
     const components = await fetch(`${Config.STATUS_URL}/api/v2/components.json`)
@@ -84,7 +89,6 @@ export default {
     res.forEach(r => r.status === 'rejected' && console.error(r.reason));
 
     // Only remember this version once every incident went through, so failures are retried next run
-    const etag = incidentsRes.headers.get('ETag');
     if (etag && res.every(r => r.status === 'fulfilled')) {
       await env.KV.put(INCIDENTS_ETAG_KEY, etag);
     }
